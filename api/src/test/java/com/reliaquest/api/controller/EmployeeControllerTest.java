@@ -125,15 +125,25 @@ class EmployeeControllerTest {
     @Test
     void deleteEmployeeById_ShouldReturnSuccessMessage() throws EmployeeServiceException {
         String employeeId = "1";
-        doNothing().when(employeeService).deleteEmployee(employeeId);
+        String employeeName = "John Doe";
+
+        EmployeeByIdResponse mockResponse = new EmployeeByIdResponse();
+        Employee mockEmployee = new Employee();
+        mockEmployee.setEmployeeName(employeeName);
+        mockResponse.setData(mockEmployee);
+
+        when(employeeService.getEmployeeById(employeeId)).thenReturn(mockResponse);
+        doNothing().when(employeeService).deleteEmployee(employeeName);
 
         ResponseEntity<String> result = employeeController.deleteEmployeeById(employeeId);
 
-        // Assert
         assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertEquals("Employee with id 1 got deleted successfully", result.getBody());
-        verify(employeeService, times(1)).deleteEmployee(employeeId);
+        assertEquals("Employee with name John Doe got deleted successfully", result.getBody());
+
+        verify(employeeService, times(1)).getEmployeeById(employeeId);
+        verify(employeeService, times(1)).deleteEmployee(employeeName);
     }
+
 
     @Test
     void getAllEmployees_ShouldThrowException_WhenServiceFails() throws EmployeeServiceException {
