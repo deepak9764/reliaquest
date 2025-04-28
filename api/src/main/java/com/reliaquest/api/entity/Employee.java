@@ -1,6 +1,7 @@
 package com.reliaquest.api.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,9 @@ public class Employee {
     @JsonProperty("employee_age")
     private String employeeAge;
 
-    @JsonProperty("profile_image")
-    private String profileImage;
+    @JsonProperty("employee_title")
+    private String employeeTitle;
+
+    @JsonProperty("employee_email")
+    private String employeeEmail;
 }

@@ -2,9 +2,12 @@ package com.reliaquest.api.controller;
 
 import java.util.List;
 
+import com.reliaquest.api.dto.EmployeeCreateRequest;
 import com.reliaquest.api.entity.Employee;
 import com.reliaquest.api.exception.EmployeeServiceException;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
  * @param <Entity> object representation of an Employee
  * @param <Input> object representation of a request body for creating Employee(s)
  */
-@RestController
 public interface IEmployeeController {
 
     @GetMapping()
@@ -28,13 +30,13 @@ public interface IEmployeeController {
     @GetMapping("/search")
     @ApiResponse(responseCode = "400", description = "Invalid name parameter")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    ResponseEntity<List<Employee>> getEmployeesByNameSearch(@RequestParam String name) throws EmployeeServiceException;
+    ResponseEntity<List<Employee>> getEmployeesByNameSearch(@RequestParam @NotBlank String name) throws EmployeeServiceException;
 
     @GetMapping("/{id}")
     @ApiResponse(responseCode = "404", description = "Employee not found")
     @ApiResponse(responseCode = "400", description = "Invalid ID format")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    ResponseEntity<Employee> getEmployeeById(@PathVariable String id) throws EmployeeServiceException;
+    ResponseEntity<Employee> getEmployeeById(@PathVariable @NotBlank String id) throws EmployeeServiceException;
 
     @GetMapping("/highest-salary")
     @ApiResponse(responseCode = "404", description = "No employees found")
@@ -49,11 +51,11 @@ public interface IEmployeeController {
     @PostMapping("/create")
     @ApiResponse(responseCode = "400", description = "Invalid employee data")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) throws EmployeeServiceException;
+    ResponseEntity<Employee> createEmployee(@RequestBody @Valid  EmployeeCreateRequest employee) throws EmployeeServiceException;
 
     @DeleteMapping("/{id}")
     @ApiResponse(responseCode = "404", description = "Employee not found")
     @ApiResponse(responseCode = "400", description = "Invalid ID format")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    ResponseEntity<String> deleteEmployeeById(@PathVariable String id) throws EmployeeServiceException;
+    ResponseEntity<String> deleteEmployeeById(@PathVariable @NotBlank String id) throws EmployeeServiceException;
 }

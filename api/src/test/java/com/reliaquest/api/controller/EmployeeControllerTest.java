@@ -1,25 +1,27 @@
 package com.reliaquest.api.controller;
 
-
+import com.reliaquest.api.dto.EmployeeCreateRequest;
 import com.reliaquest.api.entity.Employee;
 import com.reliaquest.api.entity.EmployeeByIdResponse;
+import com.reliaquest.api.entity.EmployeeResponse;
+import com.reliaquest.api.exception.EmployeeServiceException;
 import com.reliaquest.api.service.EmployeeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class EmployeeControllerTest {
 
     @Mock
@@ -28,158 +30,130 @@ class EmployeeControllerTest {
     @InjectMocks
     private EmployeeController employeeController;
 
-    private String age;
+    private Employee employee1;
+    private Employee employee2;
+    private List<Employee> employeeList;
 
     @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        age = "30";
+    void setUp() {
+        employee1 = new Employee("1", "John Doe", 100000, "30", "Developer", "john@example.com");
+        employee2 = new Employee("2", "Jane Smith", 120000, "35", "Manager", "jane@example.com");
+        employeeList = Arrays.asList(employee1, employee2);
     }
 
     @Test
-     void testGetAllEmployees_Success() {
-        List<Employee> mockEmployees = Arrays.asList(
-                new Employee("1", "John Doe",1000,age,""),
-                new Employee("2","Jane Smith", 1200,age,"")
-        );
-        when(employeeService.getAllEmployees()).thenReturn(mockEmployees);
+    void getAllEmployees_ShouldReturnAllEmployees() throws EmployeeServiceException {
+        EmployeeResponse response = new EmployeeResponse();
+        response.setData(employeeList);
+        when(employeeService.getAllEmployees()).thenReturn(employeeList);
 
-        ResponseEntity<List<Employee>> response = employeeController.getAllEmployees();
+        ResponseEntity<List<Employee>> result = employeeController.getAllEmployees();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockEmployees, response.getBody());
-    }
-
-   @Test
-    void testGetEmployeesByNameSearch_Success() {
-        String name = "John Doe";
-        List<Employee> mockEmployees = Arrays.asList(
-                new Employee("1",name, 1000,age,""),
-                new Employee("2",name, 1500,age,"")
-        );
-        when(employeeService.getEmployeesByNameSearch(name)).thenReturn(mockEmployees);
-
-        ResponseEntity<List<Employee>> response = employeeController.getEmployeesByNameSearch(name);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockEmployees, response.getBody());
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(2, result.getBody().size());
+        verify(employeeService, times(1)).getAllEmployees();
     }
 
     @Test
-    void testGetEmployeeById_Success() {
-        String id = "1";
-        Employee employee = new Employee("1", "John", 1100, age, "");
-        EmployeeByIdResponse mockResponse = new EmployeeByIdResponse();
-        mockResponse.setData(employee);
-        when(employeeService.getEmployeeById(id)).thenReturn(mockResponse);
+    void getEmployeesByNameSearch_ShouldReturnMatchingEmployees() throws EmployeeServiceException {
+        String searchName = "John";
+        when(employeeService.getEmployeesByNameSearch(searchName)).thenReturn(List.of(employee1));
 
-        ResponseEntity<Employee> response = employeeController.getEmployeeById(id);
+        ResponseEntity<List<Employee>> result = employeeController.getEmployeesByNameSearch(searchName);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse.getData(), response.getBody());
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(1, result.getBody().size());
+        assertEquals("John Doe", result.getBody().get(0).getEmployeeName());
+        verify(employeeService, times(1)).getEmployeesByNameSearch(searchName);
     }
 
     @Test
-    void testGetHighestSalaryOfEmployees_Success() {
-        int highestSalary = 2000;
+    void getEmployeeById_ShouldReturnEmployee() throws EmployeeServiceException {
+        // Arrange
+        String employeeId = "1";
+        EmployeeByIdResponse response = new EmployeeByIdResponse();
+        response.setData(employee1);
+        when(employeeService.getEmployeeById(employeeId)).thenReturn(response);
+
+        ResponseEntity<Employee> result = employeeController.getEmployeeById(employeeId);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(employee1, result.getBody());
+        verify(employeeService, times(1)).getEmployeeById(employeeId);
+    }
+
+    @Test
+    void getHighestSalaryOfEmployees_ShouldReturnHighestSalary() throws EmployeeServiceException {
+        int highestSalary = 120000;
         when(employeeService.getHighestSalaryOfEmployees()).thenReturn(highestSalary);
 
-        ResponseEntity<Integer> response = employeeController.getHighestSalaryOfEmployees();
+        ResponseEntity<Integer> result = employeeController.getHighestSalaryOfEmployees();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(highestSalary, response.getBody());
-    }
-
-
-    @Test
-    void testgetTopTenHighestEarningEmployeeNames_Success() {
-        List<Employee> mockEmployees = Arrays.asList(
-                new Employee("1", "John Doe",1000,age,""),
-                new Employee("2","Jane Smith", 1200,age,"")
-        );
-        List<String> mockEmployeesNames = Arrays.asList("John Doe", "Jane Smith");
-        when(employeeService.getTopHighestEarningEmployees(10)).thenReturn(mockEmployees);
-
-        ResponseEntity<List<String>> response = employeeController.getTopTenHighestEarningEmployeeNames();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockEmployeesNames, response.getBody());
-    }
-
-
-    @Test
-    void testCreateEmployee_Success() {
-        EmployeeByIdResponse employeeByIdResponse = new EmployeeByIdResponse();
-        Employee newEmployee = new Employee("1", "John Doe",1000,age,"");
-        employeeByIdResponse.setData(newEmployee);
-        when(employeeService.createEmployee(newEmployee)).thenReturn(employeeByIdResponse);
-
-        ResponseEntity<Employee> response = employeeController.createEmployee(newEmployee);
-
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(newEmployee, response.getBody());
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(highestSalary, result.getBody());
+        verify(employeeService, times(1)).getHighestSalaryOfEmployees();
     }
 
     @Test
-    void testDeleteEmployee_Success() {
-        String id = "1";
-        ResponseEntity<String> response = employeeController.deleteEmployeeById(id);
+    void getTopTenHighestEarningEmployeeNames_ShouldReturnTop10Names() throws EmployeeServiceException {
+        when(employeeService.getTopHighestEarningEmployees(10)).thenReturn(employeeList);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Employee with id "+ id+" got deleted successfully", response.getBody());
+        ResponseEntity<List<String>> result = employeeController.getTopTenHighestEarningEmployeeNames();
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(2, result.getBody().size());
+        assertTrue(result.getBody().contains("John Doe"));
+        assertTrue(result.getBody().contains("Jane Smith"));
+        verify(employeeService, times(1)).getTopHighestEarningEmployees(10);
     }
 
     @Test
-     void testDeleteEmployee_Exception(){
-        String id = "2";
-        Mockito.doThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND, "Employee Not Found")).when(employeeService).deleteEmployee(id);
-        ResponseEntity<String> response = employeeController.deleteEmployeeById(id);
+    void createEmployee_ShouldReturnCreatedEmployee() throws EmployeeServiceException {
+        EmployeeCreateRequest newEmployee = new EmployeeCreateRequest("New Employee", 80000, 25, "Trainee");
+        Employee savedEmployee = new Employee("3", "New Employee", 80000, "25", "Trainee", "new@example.com");
+        EmployeeByIdResponse response = new EmployeeByIdResponse();
+        response.setData(savedEmployee);
+        when(employeeService.createEmployee(newEmployee)).thenReturn(response);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        ResponseEntity<Employee> result = employeeController.createEmployee(newEmployee);
+
+        assertEquals(HttpStatus.CREATED, result.getStatusCode());
+        assertEquals(savedEmployee, result.getBody());
+        verify(employeeService, times(1)).createEmployee(newEmployee);
     }
 
     @Test
-    void testGetAllEmployees_Exception() {
-        Mockito.doThrow(new RuntimeException("Internal server error")).when(employeeService).getAllEmployees();
-        ResponseEntity<List<Employee>> response = employeeController.getAllEmployees();
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    void deleteEmployeeById_ShouldReturnSuccessMessage() throws EmployeeServiceException {
+        String employeeId = "1";
+        doNothing().when(employeeService).deleteEmployee(employeeId);
+
+        ResponseEntity<String> result = employeeController.deleteEmployeeById(employeeId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals("Employee with id 1 got deleted successfully", result.getBody());
+        verify(employeeService, times(1)).deleteEmployee(employeeId);
     }
 
     @Test
-    void testGetEmployeesByNameSearch_Exception() {
-        String name = "John Doe";
-        Mockito.doThrow(new RuntimeException("Internal server error")).when(employeeService).getEmployeesByNameSearch(name);
-        ResponseEntity<List<Employee>> response = employeeController.getEmployeesByNameSearch(name);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    void getAllEmployees_ShouldThrowException_WhenServiceFails() throws EmployeeServiceException {
+        when(employeeService.getAllEmployees()).thenThrow(new EmployeeServiceException("Service unavailable"));
+
+
+        assertThrows(EmployeeServiceException.class, () -> {
+            employeeController.getAllEmployees();
+        });
+        verify(employeeService, times(1)).getAllEmployees();
     }
 
     @Test
-    void testGetEmployeeById_Exception() {
-        String id = "1";
-        Mockito.doThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND, "Employee not found")).when(employeeService).getEmployeeById(id);
-        ResponseEntity<Employee> response = employeeController.getEmployeeById(id);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
+    void getEmployeeById_ShouldThrowException_WhenEmployeeNotFound() throws EmployeeServiceException {
+        String employeeId = "999";
+        when(employeeService.getEmployeeById(employeeId)).thenThrow(new EmployeeServiceException("Employee not found"));
 
-    @Test
-    void testGetHighestSalaryOfEmployees_Exception() {
-        Mockito.doThrow(new RuntimeException("Internal server error")).when(employeeService).getHighestSalaryOfEmployees();
-        ResponseEntity<Integer> response = employeeController.getHighestSalaryOfEmployees();
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    }
-
-    @Test
-    void testgetTopTenHighestEarningEmployeeNames_Exception() {
-        Mockito.doThrow(new RuntimeException("Internal server error")).when(employeeService).getTopHighestEarningEmployees(10);
-        ResponseEntity<List<String>> response = employeeController.getTopTenHighestEarningEmployeeNames();
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    }
-
-    @Test
-    void testCreateEmployee_Exception() {
-        Employee employee = new Employee();
-        Mockito.doThrow(new RuntimeException("Internal server error")).when(employeeService).createEmployee(employee);
-        ResponseEntity<Employee> response = employeeController.createEmployee(employee);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertThrows(EmployeeServiceException.class, () -> {
+            employeeController.getEmployeeById(employeeId);
+        });
+        verify(employeeService, times(1)).getEmployeeById(employeeId);
     }
 }

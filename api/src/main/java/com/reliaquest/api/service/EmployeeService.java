@@ -1,6 +1,7 @@
 package com.reliaquest.api.service;
 
 
+import com.reliaquest.api.dto.EmployeeCreateRequest;
 import com.reliaquest.api.entity.Employee;
 import com.reliaquest.api.entity.EmployeeByIdResponse;
 
@@ -18,7 +19,7 @@ public interface EmployeeService {
 
     List<Employee> getTopHighestEarningEmployees(int size);
 
-    EmployeeByIdResponse createEmployee(Employee employee);
+    EmployeeByIdResponse createEmployee(EmployeeCreateRequest employee);
 
-    void deleteEmployee(String id);
+    void deleteEmployee(String name);
 }

@@ -9,7 +9,6 @@ import java.util.List;
 @Getter
 public class EmployeeResponse {
 
-    private String status;
     private List<Employee> data;
-    private String message;
+    private String status;
 }

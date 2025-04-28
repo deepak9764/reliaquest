@@ -1,6 +1,8 @@
 package com.reliaquest.api.service;
 
 
+import com.reliaquest.api.dto.DeleteResponse;
+import com.reliaquest.api.dto.EmployeeCreateRequest;
 import com.reliaquest.api.entity.Employee;
 import com.reliaquest.api.entity.EmployeeByIdResponse;
 import com.reliaquest.api.entity.EmployeeResponse;
@@ -8,6 +10,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -36,8 +42,8 @@ class EmployeeServiceImplTest {
         // Mock response from the API
         EmployeeResponse mockResponse = new EmployeeResponse();
         List<Employee> employees = Arrays.asList(
-                new Employee("1", "Tiger Nixon", 320800, age, ""),
-                new Employee("2", "Garrett Winters", 170750, age, "")
+                new Employee("1", "Tiger Nixon", 320800, age, "Dynamic Hospitality Technician",""),
+                new Employee("2", "Garrett Winters", 170750, age, "Lead", "")
         );
         mockResponse.setData(employees);
         when(restTemplate.getForObject(anyString(), eq(EmployeeResponse.class))).thenReturn(mockResponse);
@@ -54,8 +60,8 @@ class EmployeeServiceImplTest {
         // Mock response from the API
         EmployeeResponse mockResponse = new EmployeeResponse();
         List<Employee> employees = Arrays.asList(
-                new Employee("1", "Tiger Nixon", 320800, age, ""),
-                new Employee("2", "Garrett Winters", 170750, age, "")
+                new Employee("1", "Tiger Nixon", 320800, age, "Dynamic Hospitality Technician",""),
+                new Employee("2", "Garrett Winters", 170750, age, "Lead", "")
         );
         mockResponse.setData(employees);
         when(restTemplate.getForObject(anyString(), eq(EmployeeResponse.class))).thenReturn(mockResponse);
@@ -73,7 +79,7 @@ class EmployeeServiceImplTest {
     void testGetEmployeeById() {
         // Mock response from the API
         EmployeeByIdResponse mockResponse = new EmployeeByIdResponse();
-        Employee employee = new Employee("1", "Tiger Nixon", 320800, age, "");
+        Employee employee = new Employee("1", "Tiger Nixon", 320800, age, "Dynamic Hospitality Technician","" );
         mockResponse.setData(employee);
         when(restTemplate.getForObject(anyString(), eq(EmployeeByIdResponse.class))).thenReturn(mockResponse);
 
@@ -89,8 +95,8 @@ class EmployeeServiceImplTest {
     void testGetHighestSalaryOfEmployees() {
         EmployeeResponse mockResponse = new EmployeeResponse();
         List<Employee> employees = Arrays.asList(
-                new Employee("1", "Tiger Nixon", 320800, age, ""),
-                new Employee("2", "Garrett Winters", 320809, age, "")
+                new Employee("1", "Tiger Nixon", 320800, age,  "Dynamic Hospitality Technician",""),
+                new Employee("2", "Garrett Winters", 320809, age, "Lead", "")
         );
         mockResponse.setData(employees);
         when(restTemplate.getForObject(anyString(),eq(EmployeeResponse.class))).thenReturn(mockResponse);
@@ -107,17 +113,17 @@ class EmployeeServiceImplTest {
         // Mock response from the API
         EmployeeResponse mockResponse = new EmployeeResponse();
         List<Employee> employees = Arrays.asList(
-                new Employee("2", "Tiger Nixon", 2, age, ""),
-                new Employee("3", "Tiger Nixon", 3, age, ""),
-                new Employee("4", "Tiger Nixon", 4, age, ""),
-                new Employee("1", "Tiger Nixon", 1, age, ""),
-                new Employee("5", "Tiger Nixon", 5, age, ""),
-                new Employee("6", "Tiger Nixon", 6, age, ""),
-                new Employee("7", "Tiger Nixon", 7, age, ""),
-                new Employee("8", "Tiger Nixon", 8, age, ""),
-                new Employee("9", "Tiger Nixon", 9, age, ""),
-                new Employee("10", "Tiger Nixon", 10, age, ""),
-                new Employee("11", "Tiger Nixon", 11, age, "")
+                new Employee("2", "Tiger Nixon", 2, age, "", ""),
+                new Employee("3", "Tiger Nixon", 3, age, "", ""),
+                new Employee("4", "Tiger Nixon", 4, age, "", ""),
+                new Employee("1", "Tiger Nixon", 1, age, "", ""),
+                new Employee("5", "Tiger Nixon", 5, age, "", ""),
+                new Employee("6", "Tiger Nixon", 6, age, "", ""),
+                new Employee("7", "Tiger Nixon", 7, age, "", "" ),
+                new Employee("8", "Tiger Nixon", 8, age, "", "" ),
+                new Employee("9", "Tiger Nixon", 9, age, "", ""),
+                new Employee("10", "Tiger Nixon", 10, age, "", "" ),
+                new Employee("11", "Tiger Nixon", 11, age, "", "" )
         );
         mockResponse.setData(employees);
         when(restTemplate.getForObject(anyString(), eq(EmployeeResponse.class))).thenReturn(mockResponse);
@@ -130,38 +136,63 @@ class EmployeeServiceImplTest {
     }
 
     @Test
-    void testCreateEmployee() {
-        // Mock response from the API
-        Employee employeeRequest = new Employee();
-        employeeRequest.setEmployeeAge(age);
-        employeeRequest.setEmployeeName("Harry");
-        employeeRequest.setEmployeeSalary(20000);
-        employeeRequest.setProfileImage(" ");
+    void testCreateEmployee() throws Exception {
+        // Mock request
+        EmployeeCreateRequest employeeRequest = new EmployeeCreateRequest();
+        employeeRequest.setAge(25);
+        employeeRequest.setName("Harry");
+        employeeRequest.setSalary(20000);
+        employeeRequest.setTitle("Lead");
 
+        // Mock response
+        Employee employee = new Employee("1", "Harry", 20000, "25", "Lead", "harry@company.com");
         EmployeeByIdResponse mockResponse = new EmployeeByIdResponse();
-        Employee employee = new Employee("1", "Harry", 20000, age, " ");
         mockResponse.setData(employee);
+        mockResponse.setStatus("Successfully processed request.");
 
-        when(restTemplate.postForObject(anyString(),eq(employeeRequest) ,eq(EmployeeByIdResponse.class))).thenReturn(mockResponse);
+        // Mocking restTemplate.exchange(...)
+        when(restTemplate.exchange(
+                anyString(),
+                any(),
+                any(),
+                eq(EmployeeByIdResponse.class))
+        ).thenReturn(new ResponseEntity<>(mockResponse, HttpStatus.OK));
 
-        // Call the service method
+        // Call the actual service
         EmployeeByIdResponse result = employeeService.createEmployee(employeeRequest);
 
-        // Verify that the service method returns the expected result
-        assertEquals(mockResponse,result);;
+        // Validate
+        assertEquals(mockResponse, result);
     }
 
     @Test
-    void testDeleteEmployee() {
-
-        // Call the service method
+    void testDeleteEmployee() throws Exception {
+        // Arrange
         String idToDelete = "1";
+        String expectedUrl = "http://localhost:8112/api/v1/employee";
+
+        DeleteResponse mockDeleteResponse = new DeleteResponse();
+        mockDeleteResponse.setData(true);
+
+        ResponseEntity<DeleteResponse> responseEntity = new ResponseEntity<>(mockDeleteResponse, HttpStatus.OK);
+
+        when(restTemplate.exchange(
+                eq(expectedUrl),
+                eq(HttpMethod.DELETE),
+                any(HttpEntity.class),
+                eq(DeleteResponse.class)
+        )).thenReturn(responseEntity);
+
+        // Act
         employeeService.deleteEmployee(idToDelete);
 
-        String expectedUrl = "https://dummy.restapiexample.com/api/v1/delete/" + idToDelete;
-
-        // Verify that the service method returns the expected result
-        verify(restTemplate, times(1)).delete(eq(expectedUrl));
+        // Assert
+        verify(restTemplate, times(1)).exchange(
+                eq(expectedUrl),
+                eq(HttpMethod.DELETE),
+                any(HttpEntity.class),
+                eq(DeleteResponse.class)
+        );
     }
 }
 

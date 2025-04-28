@@ -9,5 +9,4 @@ public class EmployeeByIdResponse {
 
     private String status;
     private Employee data;
-    private String message;
 }
