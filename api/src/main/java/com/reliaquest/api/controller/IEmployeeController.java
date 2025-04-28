@@ -44,7 +44,7 @@ public interface IEmployeeController {
     ResponseEntity<Integer> getHighestSalaryOfEmployees() throws EmployeeServiceException;
 
     @GetMapping("/top-10-highest-earning")
-    @ApiResponse(XXresponseCode = "404", description = "No employees found")
+    @ApiResponse(responseCode = "404", description = "No employees found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
     ResponseEntity<List<String>> getTopTenHighestEarningEmployeeNames() throws EmployeeServiceException;
 
