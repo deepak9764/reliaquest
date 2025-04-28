@@ -53,5 +53,19 @@ deleteEmployeeById(...)
     output - name of the employee
     description - this should delete the employee with specified id given, otherwise error
 
+### Swagger Integration
+
+To enable Swagger for API documentation, follow these steps:
+
+1. Add the following dependencies to your `build.gradle` file:
+   ```groovy
+   implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+
+2. Access the Swagger UI: Once the application is running, navigate to the following URL to view the Swagger UI:  
+   http://localhost:8111/swagger-ui/index.html
+3. OpenAPI JSON: The OpenAPI specification can be accessed at:
+   http://localhost:8111/v3/api-docs
+
+
 ### Testing
 Please include proper integration and/or unit tests.
