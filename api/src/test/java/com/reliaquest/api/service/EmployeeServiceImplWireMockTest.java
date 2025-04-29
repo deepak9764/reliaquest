@@ -14,8 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @WireMockTest(httpPort = 8112)
 class EmployeeServiceImplWireMockTest {
@@ -147,5 +146,54 @@ class EmployeeServiceImplWireMockTest {
             """)).withHeader(HttpHeaders.CONTENT_TYPE, WireMock.equalTo(MediaType.APPLICATION_JSON_VALUE)));
 
 
+    }
+
+    @Test
+    void testGetAllEmployees_whenServerError_shouldThrowException() {
+        WireMock.stubFor(WireMock.get("/api/v1/employee")
+                .willReturn(WireMock.aResponse().withStatus(500)));
+
+        assertThrows(EmployeeServiceException.class, () -> employeeService.getAllEmployees());
+    }
+
+    @Test
+    void testGetEmployeeById_whenNotFound_shouldThrowException() {
+        String invalidId = "invalid-id";
+
+        WireMock.stubFor(WireMock.get("/api/v1/employee/" + invalidId)
+                .willReturn(WireMock.aResponse().withStatus(404)));
+
+        assertThrows(EmployeeServiceException.class, () -> employeeService.getEmployeeById(invalidId));
+    }
+
+    @Test
+    void testCreateEmployee_whenBadRequest_shouldThrowException() {
+        EmployeeCreateRequest request = new EmployeeCreateRequest();
+        request.setName(""); // Invalid name
+
+        WireMock.stubFor(WireMock.post("/api/v1/employee")
+                .willReturn(WireMock.aResponse().withStatus(400)));
+
+        assertThrows(EmployeeServiceException.class, () -> employeeService.createEmployee(request));
+    }
+
+    @Test
+    void testDeleteEmployee_whenResponseIsFalse_shouldThrowException() {
+        String name = "Jill Jenkins";
+
+        WireMock.stubFor(WireMock.request("DELETE", WireMock.urlEqualTo("/api/v1/employee"))
+                .withRequestBody(WireMock.equalToJson("""
+                { "name": "Jill Jenkins" }
+            """))
+                .willReturn(WireMock.aResponse()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody("""
+                        {
+                          "data": false,
+                          "status": "Delete failed"
+                        }
+                    """)));
+
+        assertThrows(EmployeeServiceException.class, () -> employeeService.deleteEmployee(name));
     }
 }
